@@ -1,0 +1,67 @@
+workflows:
+  ios-testflight:
+    name: 猫カフェからの脱出 - TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      groups:
+        # このプロジェクト専用のios_signingグループ。
+        # 中身はCERTIFICATE_PRIVATE_KEY(使い回している配布証明書の秘密鍵)のみでよい。
+        # プロビジョニングプロファイル自体はCodemagicの
+        # Settings → Code signing identities → iOS provisioning profiles
+        # から「Upload a provisioning profile」で手動アップロードする方式のため、
+        # ここでプロファイルの中身を環境変数として渡す必要はない。
+        - ios_signing
+      vars:
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+        BUNDLE_ID: "com.yutaXXX.catcafeescape"
+      xcode: latest
+      node: latest
+    integrations:
+      app_store_connect: oddiro_asc_key
+
+    scripts:
+      - name: npm install
+        script: |
+          npm install
+
+      - name: Capacitor sync (www/ → ios/App/App/public)
+        script: |
+          npx cap sync ios
+
+      - name: ビルド番号をCodemagicのビルド番号へ同期
+        script: |
+          cd ios/App
+          sed -i '' "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $PROJECT_BUILD_NUMBER;/g" App.xcodeproj/project.pbxproj
+
+      - name: コード署名のセットアップ(使い回し証明書 + 手動アップロード済みプロファイル)
+        script: |
+          keychain initialize
+          # ios_signingグループのCERTIFICATE_PRIVATE_KEY(使い回している配布証明書)を
+          # キーチェーンへ追加する。
+          keychain add-certificates
+
+          # プロビジョニングプロファイルはCodemagic側で事前に
+          # 「Upload a provisioning profile」から手動アップロード済みのものを使う
+          # (fetch-signing-filesは使わない)。Available provisioning profilesに
+          # 対象アプリのプロファイルが緑チェック付きで表示されていることが前提。
+          xcode-project use-profiles
+
+      - name: Xcodeビルド(.ipa作成)
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+          # Capacitor 8はSPM構成のため --workspace ではなく --project を使用する。
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - App Store Connect Users

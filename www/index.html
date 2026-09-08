@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- STEP12-A: 初期リリース対象はiPhone縦画面のみ。
+     Capacitorビルド時はネイティブ側(Info.plist / capacitor.config)でも
+     Portrait固定を設定する予定(このHTML/CSS側はブラウザ確認用の簡易対応のみ)。 -->
+<title>猫カフェからの脱出</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ========== TITLE ========== -->
+  <section id="screen-title" class="screen">
+    <div class="screen-inner title-inner">
+      <p class="title-eyebrow">閉店後の、ひみつの時間。</p>
+      <h1 class="title-logo">猫カフェ<br>からの脱出</h1>
+      <div class="title-cats" aria-hidden="true">
+        <span class="paw">🐾</span><span class="paw">🐾</span><span class="paw">🐾</span>
+      </div>
+      <button class="btn btn-primary" id="btn-title-start">はじめる</button>
+      <button class="btn btn-text" id="btn-title-continue">つづきから</button>
+    </div>
+  </section>
+
+  <!-- ========== INTRO ========== -->
+  <section id="screen-intro" class="screen">
+    <div class="screen-inner intro-inner">
+      <h2 class="section-heading">Prologue</h2>
+      <p class="intro-text">
+        アルバイトの片付けを終えて出ようとしたら、<br>
+        入口のドアに鍵がかかっていた。<br><br>
+        閉店後の猫カフェにひとり取り残されてしまったみたい。<br>
+        猫たちの様子や、店内に残されたヒントを頼りに、<br>
+        出口を探そう。
+      </p>
+      <button class="btn btn-primary" id="btn-intro-start">お店を見てみる</button>
+    </div>
+  </section>
+
+  <!-- ========== GAME (ROOM_CAFE / ROOM_STAFF) ========== -->
+  <section id="screen-game" class="screen">
+
+    <div class="game-topbar">
+      <div class="game-topbar-left">
+        <!-- STAFF ROOMからの正式退室導線(入室はWALL_4のスタッフ扉経由のみ)。
+             inventory-barと重なる下部配置を避け、topbarへ統合する(STEP12-A)。 -->
+        <button class="btn btn-secondary btn-compact" id="btn-exit-staff-room" style="display:none;">CAFEへ戻る</button>
+        <div class="room-label" id="room-label">CAT CAFE</div>
+      </div>
+      <button class="icon-btn" id="btn-open-menu" aria-label="メニュー">≡</button>
+    </div>
+
+    <div class="wall-message" id="wall-message"></div>
+
+    <div class="wall-stage" id="wall-stage">
+      <div class="wall-image-frame" id="wall-image-frame">
+        <img id="wall-bg-img" class="wall-bg-img" alt="">
+        <div class="wall-bg-fallback" id="wall-bg-fallback"></div>
+        <!-- 常時表示overlay(MONA等)。renderWallOverlays()が壁ごとに動的追加する。 -->
+        <div class="wall-overlay-layer" id="wall-overlay-layer"></div>
+        <!-- Hotspotは相対座標(0〜1)で配置する。frame自体が背景画像と同じ縦横比になるため、
+             rectはベース画像そのものの0〜1相対座標として扱える。 -->
+        <div class="hotspot-layer" id="hotspot-layer"></div>
+      </div>
+    </div>
+
+    <!-- ROOM_CAFEのみ表示: 4壁左右循環移動 -->
+    <button class="nav-arrow nav-left" id="nav-left" aria-label="左へ">‹</button>
+    <button class="nav-arrow nav-right" id="nav-right" aria-label="右へ">›</button>
+
+    <!-- inventory (STEP2): GAME/ZOOM共通のstate.inventoryを描画する -->
+    <div class="inventory-bar" id="inventory-bar-game"></div>
+
+  </section>
+
+  <!-- ========== ZOOM ========== -->
+  <section id="screen-zoom" class="screen">
+    <div class="zoom-topbar">
+      <button class="icon-btn" id="btn-zoom-close" aria-label="閉じる">✕</button>
+    </div>
+    <div class="zoom-stage" id="zoom-stage"></div>
+    <!-- inventory (STEP2): GAME画面と同じstate.inventoryを共有表示 -->
+    <div class="inventory-bar" id="inventory-bar-zoom"></div>
+  </section>
+
+  <!-- ========== ITEMDETAIL ========== -->
+  <section id="screen-itemdetail" class="screen">
+    <div class="screen-inner itemdetail-inner">
+      <div class="itemdetail-image-frame">
+        <img id="itemdetail-img" class="itemdetail-img" alt="">
+        <div class="itemdetail-fallback" id="itemdetail-fallback"></div>
+      </div>
+      <p class="itemdetail-name" id="itemdetail-name">アイテム名（未実装）</p>
+      <button class="btn btn-text" id="btn-itemdetail-close">閉じる</button>
+    </div>
+  </section>
+
+  <!-- ========== HINT ========== -->
+  <section id="screen-hint" class="screen">
+    <div class="screen-inner hint-inner">
+      <h2 class="section-heading">ヒント</h2>
+      <p class="hint-placeholder" id="hint-text">ヒントを読み込み中…</p>
+      <button class="btn btn-primary" id="btn-hint-close">閉じる</button>
+    </div>
+  </section>
+
+  <!-- ========== MENU ========== -->
+  <section id="screen-menu" class="screen">
+    <div class="screen-inner menu-inner">
+      <h2 class="section-heading">MENU</h2>
+      <button class="btn btn-secondary" id="btn-menu-resume">ゲームにもどる</button>
+
+<button class="btn btn-secondary" id="btn-menu-bgm">
+  BGM：ON
+</button>
+
+<button class="btn btn-secondary" id="btn-menu-se">
+  効果音：ON
+</button>
+
+<button class="btn btn-secondary" id="btn-menu-hint">広告を見てヒント</button>
+<button class="btn btn-secondary" id="btn-menu-title">タイトルへ</button>
+
+    </div>
+  </section>
+
+  <!-- ========== CLEARSEQ ========== -->
+  <section id="screen-clearseq" class="screen">
+    <div class="screen-inner clearseq-inner">
+      <p class="clearseq-text" id="clearseq-text"></p>
+    </div>
+  </section>
+
+  <!-- ========== CLEARRESULT ========== -->
+  <section id="screen-clearresult" class="screen">
+    <div class="screen-inner clearresult-inner">
+      <h2 class="section-heading">CLEAR</h2>
+      <p class="clearresult-title">脱出成功！</p>
+      <p class="clearresult-message">猫カフェから無事に脱出できた！</p>
+      <p class="clearresult-time" id="clearresult-time"></p>
+      <button class="btn btn-primary" id="btn-clearresult-title">タイトルへ戻る</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- STEP12-A: 横向き時の簡易案内。縦画面前提のためゲームを壊さない最低限の対応。
+     ネイティブ側でPortrait固定した場合はそもそも表示されない想定。 -->
+<div id="orientation-lock">
+  <p>📱</p>
+  <p>縦画面でご利用ください</p>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/state.js"></script>
+<script src="js/persistence.js"></script>
+<script src="js/flags.js"></script>
+<script src="js/items.js"></script>
+<script src="js/inventory.js"></script>
+<script src="js/zoom.js"></script>
+<script src="js/wall1.js"></script>
+<script src="js/wall2.js"></script>
+<script src="js/wall3.js"></script>
+<script src="js/wall4.js"></script>
+<script src="js/staffroom1.js"></script>
+<script src="js/staffroom2.js"></script>
+<script src="js/hints.js"></script>
+<script src="js/clear.js"></script>
+<script src="js/ads.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+  // ---------------------------------------------------------
+  // BGM開始
+  // iOS / ブラウザの自動再生制限対策として
+  // ユーザー操作をきっかけに再生する
+  // ---------------------------------------------------------
+
+  // NEW GAME：
+  // プロローグから実際のゲーム画面へ入る時
+  document
+    .getElementById("btn-intro-start")
+    ?.addEventListener("click", () => {
+      playBGM();
+    });
+
+
+  // CONTINUE：
+  // 「つづきから」を押した時
+  document
+    .getElementById("btn-title-continue")
+    ?.addEventListener("click", () => {
+      playBGM();
+    });
+</script>
+
+</body>
+</html>

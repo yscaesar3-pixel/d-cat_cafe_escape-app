@@ -1,0 +1,892 @@
+/* =========================================================
+   猫カフェからの脱出 - STEP1 骨格スタイル
+   トークン: 可愛い / 明るい / POP / 木 / 白 / ベージュ / ミント / くすみピンク / 丸み
+   ========================================================= */
+
+:root {
+  /* --- Color --- */
+  --color-cream:      #FBF6EC;   /* 背景ベース */
+  --color-beige:       #EEE0C8;   /* カード/木の温度 */
+  --color-mint:        #BEE3D4;   /* アクセント1 */
+  --color-pink:        #F3CCD4;   /* アクセント2 */
+  --color-wood:        #A9754F;   /* ふち・木の質感 */
+  --color-wood-dark:   #7C5638;
+  --color-ink:         #4A3B2E;   /* 文字色(温かいこげ茶。純黒は使わない) */
+  --color-ink-soft:    #8A7A68;
+
+  /* --- Type --- */
+  --font-rounded: "Hiragino Maru Gothic ProN", "Yumin", "Zen Maru Gothic", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+
+  /* --- Radius / Shadow --- */
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --shadow-soft: 0 6px 18px rgba(122, 92, 61, 0.18);
+
+  /* --- Safe area --- */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* --- STEP12-A: レイアウト予約サイズ(Safe Area計算とUI重なり防止で共通利用) --- */
+  --topbar-reserve: 64px;     /* game-topbar / zoom-topbar のおおよその高さ */
+  --inventory-reserve: 90px;  /* inventory-bar のおおよその高さ */
+  /* STEP12-C: AdMobバナーの実測高さ(px)。show成功時にads.jsが動的に上書きする。
+     非表示/失敗時は0pxに戻り、予約領域も自動的に解放される。 */
+  --banner-reserve: 0px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-ink);
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* 画像長押しメニュー抑止 */
+}
+
+body {
+  font-family: var(--font-rounded);
+  color: var(--color-ink);
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--color-cream);
+}
+
+/* =========================================================
+   画面切り替え(共通)
+   ========================================================= */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+.screen.active {
+  display: flex;
+}
+
+.screen-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-top) + 24px) calc(var(--safe-right) + 24px)
+           calc(var(--safe-bottom) + 24px) calc(var(--safe-left) + 24px);
+  text-align: center;
+  gap: 14px;
+}
+
+.section-heading {
+  margin: 0 0 4px;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-soft);
+  font-weight: 700;
+}
+
+/* =========================================================
+   共通ボタン
+   ========================================================= */
+.btn {
+  font-family: var(--font-rounded);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.btn:active { transform: scale(0.96); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+
+.btn-primary {
+  background: var(--color-pink);
+  color: var(--color-wood-dark);
+  box-shadow: var(--shadow-soft);
+}
+.btn-secondary {
+  background: var(--color-mint);
+  color: var(--color-wood-dark);
+  box-shadow: var(--shadow-soft);
+}
+.btn-text {
+  background: transparent;
+  color: var(--color-ink-soft);
+  text-decoration: underline;
+  padding: 10px 16px;
+}
+.btn-debug {
+  background: var(--color-wood);
+  color: var(--color-cream);
+  font-size: 12px;
+  padding: 10px 16px;
+  opacity: 0.85;
+}
+
+.icon-btn {
+  /* STEP12-A: 40px→44pxへ拡大(タップ推奨サイズ)。 */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.75);
+  color: var(--color-wood-dark);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-soft);
+  flex: 0 0 auto;
+}
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+.title-inner {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(190,227,212,0.55), transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(243,204,212,0.55), transparent 55%);
+}
+.title-eyebrow {
+  margin: 0;
+  color: var(--color-ink-soft);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+.title-logo {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1.35;
+  color: var(--color-wood-dark);
+  font-weight: 800;
+}
+.title-cats {
+  font-size: 22px;
+  letter-spacing: 10px;
+  margin: 4px 0 12px;
+  opacity: 0.7;
+}
+
+/* =========================================================
+   INTRO
+   ========================================================= */
+.intro-text {
+  max-width: 320px;
+  line-height: 1.9;
+  color: var(--color-ink);
+  font-size: 15px;
+}
+
+/* =========================================================
+   GAME (ROOM_CAFE / ROOM_STAFF)
+   ========================================================= */
+#screen-game {
+  background: var(--color-ink);
+}
+
+.game-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* STEP12-A: .safe-topユーティリティクラスへの依存をやめ、ここで直接計算する
+     (カスケード順序に依存するとzoom-topbarと同様のバグを将来再発させかねないため)。 */
+  padding: calc(var(--safe-top) + 10px) 16px 10px;
+  gap: 10px;
+}
+.game-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* room-labelが長い時にflexboxではみ出さないように */
+}
+.btn-compact {
+  padding: 9px 16px;
+  font-size: 13px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.safe-top { padding-top: calc(var(--safe-top) + 10px); }
+.safe-bottom { padding-bottom: calc(var(--safe-bottom) + 12px); }
+
+.room-label {
+  background: rgba(255,255,255,0.8);
+  color: var(--color-wood-dark);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+}
+
+.wall-message {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--safe-top) + 64px);
+  transform: translateX(-50%) translateY(-8px);
+  z-index: 40;
+  background: rgba(74, 59, 46, 0.9);
+  color: var(--color-cream);
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+.wall-message.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.wall-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* frameをcontain相当で中央配置する。画像はcropしない。
+     topbar/inventory-barの高さをpaddingとして確保し、
+     fitFrameToContainer()がこの分を除いた実領域でframeサイズを算出する(STEP12-A)。
+     これにより壁画像がtopbar/inventory-barの下に隠れることを防ぐ。 */
+  padding-top: calc(var(--safe-top) + var(--topbar-reserve));
+  /* STEP12-C: inventory-barに加え、AdMobバナー表示中はその高さ分も除外して
+     壁画像がバナーの裏に隠れないようにする。 */
+  padding-bottom: calc(var(--safe-bottom) + var(--inventory-reserve) + var(--banner-reserve));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-ink); /* レターボックス部分の色 */
+}
+
+/* wall-image-frame自体を背景画像の実縦横比に合わせる(JSでaspect-ratioを設定する)。
+   Hotspot/overlayのrectは、このframeの0〜1相対座標=ベース画像そのものの0〜1相対座標として扱える。
+   デフォルト値は読み込み前/失敗時のフォールバック。 */
+.wall-image-frame {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 3 / 4;
+}
+.wall-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* frameが既に実比率のため通常はcontain=fillと同義。安全側の保険。 */
+  -webkit-user-drag: none;
+}
+.wall-bg-fallback {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-wood-dark);
+  text-align: center;
+  padding: 20px;
+  line-height: 1.6;
+  background: var(--color-beige);
+}
+.wall-bg-fallback.show { display: flex; }
+
+.wall-overlay-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none; /* 見た目のみ。タップ判定はhotspot-layer側で行う */
+}
+
+.hotspot-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* Hotspotは0〜1の相対座標(left/top/width/height を%指定)でrenderWallHotspots()が動的追加する。
+     frameがベース画像と同じ縦横比になっているため、この0〜1はベース画像そのものの座標と一致する。 */
+}
+
+/* Hotspot本体(壁用・ズーム用共通) */
+.hotspot {
+  position: absolute;
+  border: none;
+  background: rgba(255, 255, 255, 0.001); /* 完全透明だとiOSでタップ判定が不安定なため極薄背景 */
+  padding: 0;
+  cursor: pointer;
+}
+/* STEP11.5-C: 実画像照合による目視確認が完了したため、開発用の破線枠を無効化する。
+   正式プレイ画面ではHotspot領域は見えない。
+.hotspot {
+  outline: 1px dashed rgba(169, 117, 79, 0.45);
+  outline-offset: -1px;
+}
+*/
+
+.nav-arrow {
+  position: absolute;
+  /* wall-stageのpadding-top/padding-bottomの差分だけ50%からずらし、
+     実際に表示されている画像領域の垂直中央に一致させる(STEP12-A)。 */
+  top: calc(
+    50% +
+    (var(--safe-top) + var(--topbar-reserve) - var(--safe-bottom) - var(--inventory-reserve) - var(--banner-reserve)) / 2
+  );
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.75);
+  color: var(--color-wood-dark);
+  font-size: 24px;
+  box-shadow: var(--shadow-soft);
+}
+.nav-left  { left: 12px; }
+.nav-right { right: 12px; }
+.nav-arrow.hidden { display: none; }
+
+/* =========================================================
+   INVENTORY (STEP2 / STEP12-A: Safe Area対応)
+   横スクロールのFlexbox。CSS Gridは使わない
+   (メモリ: WKWebViewでのaspect-ratio崩れを避けるためFlexbox統一)。
+   ========================================================= */
+.inventory-bar {
+  position: absolute;
+  left: 0; right: 0;
+  /* STEP12-C: AdMobバナー表示中はバナーの上に、非表示時は画面最下部に配置する。
+     画像 → inventory → banner → Safe Area の順を維持する。 */
+  bottom: var(--banner-reserve);
+  z-index: 25;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  /* bottom方向は常にSafe Area(Home Indicator)を確保する。
+     STEP12-A: 以前はzoom側だけ.safe-bottomクラスで個別対応していたが、
+     GAME/ZOOM共通で常に安全になるようベースルールへ統合した。 */
+  padding: 10px calc(var(--safe-left) + 14px) calc(var(--safe-bottom) + 10px) calc(var(--safe-right) + 14px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(to top, rgba(251,246,236,0.96), rgba(251,246,236,0.0));
+  min-height: 78px;
+}
+
+.inventory-empty {
+  color: var(--color-ink-soft);
+  font-size: 12px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.inventory-slot {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  background: var(--color-cream);
+  border: 2px solid var(--color-beige);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+.inventory-slot.selected {
+  border-color: var(--color-pink);
+  box-shadow: 0 0 0 3px rgba(243, 204, 212, 0.7), var(--shadow-soft);
+  transform: translateY(-4px);
+}
+.inventory-slot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+}
+.inventory-slot-fallback {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--color-ink-soft);
+  padding: 4px;
+}
+.inventory-slot-fallback.show { display: flex; }
+
+/* =========================================================
+   ZOOM
+   ========================================================= */
+.zoom-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  /* STEP12-A修正: 以前は.safe-topユーティリティクラス(先に定義)に依存していたが、
+     このルール(後に定義)のpaddingショートハンドがpadding-topを10pxで上書きしてしまい、
+     Dynamic Island/ノッチのSafe Areaが無視される実バグがあった。
+     カスケード順序に依存しないよう、ここで直接safe-topを計算する。 */
+  padding: calc(var(--safe-top) + 10px) 16px 10px;
+}
+.zoom-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px calc(var(--safe-bottom) + var(--inventory-reserve) + var(--banner-reserve));
+  position: relative;
+}
+.zoom-placeholder {
+  background: var(--color-beige);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  color: var(--color-ink-soft);
+  font-size: 14px;
+}
+
+.zoom-image-frame {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 3 / 4; /* デフォルト値。JSで対象画像の実縦横比に上書きされる */
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-beige);
+  box-shadow: var(--shadow-soft);
+}
+.zoom-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* overlayは常にhotspot-layer側でタップを扱う */
+}
+.zoom-layer-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* frameが既に実比率のため通常はcontain=fillと同義。安全側の保険。 */
+  -webkit-user-drag: none;
+}
+.zoom-layer-fallback {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+.zoom-layer-fallback.show { display: flex; }
+
+.zoom-hotspot-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.zoom-message {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + var(--inventory-reserve) + var(--banner-reserve) + 6px);
+  transform: translateX(-50%) translateY(8px);
+  background: rgba(74, 59, 46, 0.9);
+  color: var(--color-cream);
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+.zoom-message.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* =========================================================
+   ごはん棚: 矢印選択パネル (STEP4)
+   ========================================================= */
+.food-area-panel {
+  position: absolute;
+  left: 50%;
+  /* STEP12-A: inventory-barと重ならないよう固定オフセットへ変更(以前は8%固定で
+     画面が小さい端末だとinventory-barと重なる可能性があった)。 */
+  bottom: calc(var(--safe-bottom) + var(--inventory-reserve) + var(--banner-reserve) + 10px);
+  transform: translateX(-50%);
+  width: 86%;
+  background: rgba(251, 246, 236, 0.92);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.food-area-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.food-area-label {
+  width: 44px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-wood-dark);
+}
+.food-area-can {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-ink);
+}
+.food-area-arrow {
+  /* STEP12-A: 30px→40pxへ拡大(タップ推奨サイズ44pxに近づける)。 */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-mint);
+  color: var(--color-wood-dark);
+  font-size: 18px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+/* =========================================================
+   スタッフ扉キーパッド (STEP6)
+   ========================================================= */
+.keypad-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + var(--inventory-reserve) + var(--banner-reserve) + 10px);
+  transform: translateX(-50%);
+  width: 78%;
+  max-width: 280px;
+  background: rgba(251, 246, 236, 0.94);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  box-shadow: var(--shadow-soft);
+}
+.keypad-display {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: var(--color-wood-dark);
+  margin-bottom: 10px;
+}
+.keypad-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.keypad-key {
+  width: 30%;
+  aspect-ratio: 1.6 / 1;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-beige);
+  color: var(--color-wood-dark);
+  font-size: 16px;
+  font-weight: 700;
+}
+.keypad-key-clear {
+  background: var(--color-pink);
+}
+
+/* =========================================================
+   スタッフメモ本文パネル (STEP8)
+   ========================================================= */
+.note-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 82%;
+  max-width: 320px;
+  background: rgba(251, 246, 236, 0.97);
+  border-radius: var(--radius-lg);
+  padding: 20px 18px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.note-panel-text {
+  margin: 0;
+  white-space: pre-line;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--color-ink);
+  text-align: left;
+}
+
+/* =========================================================
+   ITEMDETAIL
+   ========================================================= */
+.itemdetail-image-frame {
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-lg);
+  background: var(--color-beige);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+.itemdetail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+}
+.itemdetail-fallback {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+  text-align: center;
+  padding: 12px;
+}
+.itemdetail-fallback.show { display: flex; }
+.itemdetail-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-wood-dark);
+}
+
+/* =========================================================
+   HINT
+   ========================================================= */
+.hint-placeholder {
+  max-width: 300px;
+  line-height: 1.8;
+  color: var(--color-ink-soft);
+  font-size: 14px;
+}
+
+/* =========================================================
+   MENU
+   ========================================================= */
+.menu-inner .btn { width: 220px; }
+
+/* =========================================================
+   CLEARSEQ / CLEARRESULT
+   ========================================================= */
+#screen-clearseq { background: var(--color-ink); }
+.clearseq-text {
+  color: var(--color-cream);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  min-height: 1.5em;
+}
+.clearresult-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-wood-dark);
+}
+.clearresult-message {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-ink);
+  line-height: 1.7;
+}
+.clearresult-time {
+  margin: 4px 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.04em;
+}
+
+/* =========================================================
+   横向き案内 (STEP12-A)
+   縦画面前提のため、横向き時は最低限プレイを止めて案内するのみ。
+   ネイティブ側(Capacitor/iOS)でPortrait固定した場合はそもそも
+   横向きにならないため、この表示は出ない想定。
+   ========================================================= */
+#orientation-lock {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--color-ink);
+  color: var(--color-cream);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-rounded);
+  text-align: center;
+  padding: 24px;
+}
+#orientation-lock p:first-child {
+  font-size: 40px;
+  margin: 0;
+}
+#orientation-lock p:last-child {
+  font-size: 15px;
+  margin: 0;
+}
+@media (orientation: landscape) and (max-height: 600px) and (pointer: coarse) {
+  #orientation-lock {
+    display: flex;
+  }
+}
+
+/* ---------------------------------------------------------
+   猫アイコン収納：押し込み演出
+   --------------------------------------------------------- */
+
+.cat-locker-button {
+  overflow: hidden;
+}
+
+.cat-locker-button-pressed::before {
+  content: "";
+  position: absolute;
+
+  left: var(--press-offset-x, 0px);
+  top: var(--press-offset-y, 0px);
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0, 0, 0, 0.18);
+
+  box-shadow:
+    inset 0 7px 10px rgba(0, 0, 0, 0.42),
+    inset 0 -2px 3px rgba(255, 255, 255, 0.12);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   キャットタワー：猫ボタン押し込み演出
+   --------------------------------------------------------- */
+
+.cat-tower-button {
+  overflow: hidden;
+}
+
+.cat-tower-button-pressed::before {
+  content: "";
+  position: absolute;
+
+  left: var(--press-offset-x, 0px);
+  top: var(--press-offset-y, 0px);
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0, 0, 0, 0.18);
+
+  box-shadow:
+    inset 0 7px 10px rgba(0, 0, 0, 0.42),
+    inset 0 -2px 3px rgba(255, 255, 255, 0.12);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   スタッフ扉キーパッド
+   画像内の液晶表示
+   --------------------------------------------------------- */
+
+/* ---------------------------------------------------------
+   スタッフ扉キーパッド
+   画像内の液晶表示
+--------------------------------------------------------- */
+.staff-keypad-image-display {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  justify-items: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---------------------------------------------------------
+   スタッフ扉キーパッド
+   液晶4桁表示
+--------------------------------------------------------- */
+
+.staff-keypad-image-char {
+  position: absolute;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: Arial, sans-serif;
+  font-size: clamp(18px, 5vw, 30px);
+  font-weight: 700;
+
+  color: #f4f4f4;
+
+  line-height: 1;
+
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---------------------------------------------------------
+   KEY BOX 画像内液晶表示
+--------------------------------------------------------- */
+
+.keybox-image-char {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: monospace;
+  font-size: clamp(18px, 5vw, 34px);
+  font-weight: bold;
+  color: #ffffff;
+
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 0.35),
+    0 0 4px rgba(0, 0, 0, 0.25);
+
+  pointer-events: none;
+  z-index: 5;
+}
