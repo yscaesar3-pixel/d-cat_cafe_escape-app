@@ -179,3 +179,26 @@ function setSEEnabled(enabled) {
 // ---------------------------------------------------------
 
 loadAudioSettings();
+
+// ---------------------------------------------------------
+// アプリがバックグラウンドへ移った時はBGM停止
+// 復帰時はゲーム中かつBGM ONなら再開
+// ---------------------------------------------------------
+
+document.addEventListener("visibilitychange", () => {
+
+  if (document.hidden) {
+    stopBGM();
+    return;
+  }
+
+  if (
+    audioSettings.bgm &&
+    typeof state !== "undefined" &&
+    state.screen !== "TITLE" &&
+    state.screen !== "CLEARSEQ" &&
+    state.screen !== "CLEARRESULT"
+  ) {
+    playBGM();
+  }
+});

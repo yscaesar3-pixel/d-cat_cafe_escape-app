@@ -21,7 +21,109 @@ function updateAudioMenuButtons() {
   }
 }
 
+// =========================================================
+// MEMO
+// =========================================================
+
+const MEMO_STORAGE_KEY =
+  "nekocafeescape_memo";
+
+let memoPreviousScreen = null;
+
+
+function loadMemoText() {
+  try {
+    return (
+      localStorage.getItem(
+        MEMO_STORAGE_KEY
+      ) || ""
+    );
+  } catch (e) {
+    return "";
+  }
+}
+
+
+function saveMemoText(text) {
+  try {
+    localStorage.setItem(
+      MEMO_STORAGE_KEY,
+      text
+    );
+  } catch (e) {
+    console.warn(
+      "Memo save failed",
+      e
+    );
+  }
+}
+
+
+function openMemo() {
+  memoPreviousScreen =
+    state.screen;
+
+  const textarea =
+    document.getElementById(
+      "memo-text"
+    );
+
+  if (textarea) {
+    textarea.value =
+      loadMemoText();
+  }
+
+ showScreen(SCREEN.MEMO);
+}
+
+
+function closeMemo() {
+  const textarea =
+    document.getElementById(
+      "memo-text"
+    );
+
+  if (textarea) {
+    saveMemoText(
+      textarea.value
+    );
+  }
+
+  const destination =
+    memoPreviousScreen ||
+    SCREEN.GAME;
+
+  memoPreviousScreen = null;
+
+  showScreen(destination);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+
+  // --- MEMO ---
+document
+  .getElementById("btn-open-memo-game")
+  .addEventListener("click", () => {
+    openMemo();
+  });
+
+document
+  .getElementById("btn-open-memo-zoom")
+  .addEventListener("click", () => {
+    openMemo();
+  });
+
+document
+  .getElementById("btn-memo-close")
+  .addEventListener("click", () => {
+    closeMemo();
+  });
+
+document
+  .getElementById("memo-text")
+  .addEventListener("input", (e) => {
+    saveMemoText(e.target.value);
+  });
 
   // --- TITLE ---
   document.getElementById("btn-title-start").addEventListener("click", () => {

@@ -13,6 +13,7 @@ const SCREEN_ELEMENT_ID = {
   [SCREEN.ITEMDETAIL]: "screen-itemdetail",
   [SCREEN.HINT]: "screen-hint",
   [SCREEN.MENU]: "screen-menu",
+  [SCREEN.MEMO]: "screen-memo",
   [SCREEN.CLEARSEQ]: "screen-clearseq",
   [SCREEN.CLEARRESULT]: "screen-clearresult",
 };

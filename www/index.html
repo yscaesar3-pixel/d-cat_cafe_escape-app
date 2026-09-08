@@ -46,15 +46,19 @@
   <!-- ========== GAME (ROOM_CAFE / ROOM_STAFF) ========== -->
   <section id="screen-game" class="screen">
 
-    <div class="game-topbar">
-      <div class="game-topbar-left">
-        <!-- STAFF ROOMからの正式退室導線(入室はWALL_4のスタッフ扉経由のみ)。
-             inventory-barと重なる下部配置を避け、topbarへ統合する(STEP12-A)。 -->
-        <button class="btn btn-secondary btn-compact" id="btn-exit-staff-room" style="display:none;">CAFEへ戻る</button>
-        <div class="room-label" id="room-label">CAT CAFE</div>
-      </div>
-      <button class="icon-btn" id="btn-open-menu" aria-label="メニュー">≡</button>
-    </div>
+<div class="game-topbar">
+  <div class="game-topbar-left">
+    <!-- STAFF ROOMからの正式退室導線(入室はWALL_4のスタッフ扉経由のみ)。
+         inventory-barと重なる下部配置を避け、topbarへ統合する(STEP12-A)。 -->
+    <button class="btn btn-secondary btn-compact" id="btn-exit-staff-room" style="display:none;">CAFEへ戻る</button>
+    <div class="room-label" id="room-label">CAT CAFE</div>
+  </div>
+
+  <div class="game-topbar-actions">
+    <button class="btn btn-secondary btn-compact" id="btn-open-memo-game">MEMO</button>
+    <button class="icon-btn" id="btn-open-menu" aria-label="メニュー">≡</button>
+  </div>
+</div>
 
     <div class="wall-message" id="wall-message"></div>
 
@@ -82,8 +86,9 @@
   <!-- ========== ZOOM ========== -->
   <section id="screen-zoom" class="screen">
     <div class="zoom-topbar">
-      <button class="icon-btn" id="btn-zoom-close" aria-label="閉じる">✕</button>
-    </div>
+  <button class="btn btn-secondary btn-compact" id="btn-open-memo-zoom">MEMO</button>
+  <button class="icon-btn" id="btn-zoom-close" aria-label="閉じる">✕</button>
+</div>
     <div class="zoom-stage" id="zoom-stage"></div>
     <!-- inventory (STEP2): GAME画面と同じstate.inventoryを共有表示 -->
     <div class="inventory-bar" id="inventory-bar-zoom"></div>
@@ -109,6 +114,25 @@
       <button class="btn btn-primary" id="btn-hint-close">閉じる</button>
     </div>
   </section>
+
+  <!-- ========== MEMO ========== -->
+<section id="screen-memo" class="screen">
+  <div class="screen-inner memo-inner">
+
+    <div class="memo-header">
+      <h2 class="section-heading">MEMO</h2>
+      <button class="icon-btn" id="btn-memo-close" aria-label="閉じる">✕</button>
+    </div>
+
+    <textarea
+      id="memo-text"
+      class="memo-textarea"
+      maxlength="2000"
+      placeholder="気になったことを自由にメモできます。"
+    ></textarea>
+
+  </div>
+</section>
 
   <!-- ========== MENU ========== -->
   <section id="screen-menu" class="screen">
