@@ -4,14 +4,11 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      groups:
-        # このプロジェクト専用のios_signingグループ。
-        # 中身はCERTIFICATE_PRIVATE_KEY(使い回している配布証明書の秘密鍵)のみでよい。
-        # プロビジョニングプロファイル自体はCodemagicの
-        # Settings → Code signing identities → iOS provisioning profiles
-        # から「Upload a provisioning profile」で手動アップロードする方式のため、
-        # ここでプロファイルの中身を環境変数として渡す必要はない。
-        - ios_signing
+      # CodemagicのCode signing identitiesに登録済みの
+      # App Store配布用証明書・Provisioning ProfileをBundle IDで取得する。
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.yutaXXX.catcafeescape
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
@@ -35,17 +32,10 @@ workflows:
           cd ios/App
           sed -i '' "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = $PROJECT_BUILD_NUMBER;/g" App.xcodeproj/project.pbxproj
 
-      - name: コード署名のセットアップ(使い回し証明書 + 手動アップロード済みプロファイル)
+      - name: コード署名のセットアップ
         script: |
-          keychain initialize
-          # ios_signingグループのCERTIFICATE_PRIVATE_KEY(使い回している配布証明書)を
-          # キーチェーンへ追加する。
-          keychain add-certificates
-
-          # プロビジョニングプロファイルはCodemagic側で事前に
-          # 「Upload a provisioning profile」から手動アップロード済みのものを使う
-          # (fetch-signing-filesは使わない)。Available provisioning profilesに
-          # 対象アプリのプロファイルが緑チェック付きで表示されていることが前提。
+          # environment.ios_signing で取得された証明書・Provisioning Profileを
+          # Xcodeプロジェクトの署名設定へ適用する。
           xcode-project use-profiles
 
       - name: Xcodeビルド(.ipa作成)
