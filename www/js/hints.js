@@ -10,7 +10,8 @@
    - 一度開放したヒントは広告なしで何度でも確認できる。
    - 開放状況は state.hintState.unlocked に保存する。
    - usedHintCount は広告で新しい段階を開放した回数。
-   - 既存のflags / inventoryから現在の進行段階を判定する。
+   - 現在の進行は、可能な限り「完了フラグ」を優先して判定する。
+   - 消費済みアイテムの非所持を理由に、過去のヒントへ戻らない。
    ========================================================= */
 
 const HINT_MAX_LEVEL = 3;
@@ -35,9 +36,7 @@ function ensureHintState() {
     state.hintState.unlocked = {};
   }
 
-  // 以前のKEY BOX試験実装
-  // state.hintState.keyBoxStage
-  // が存在する場合は新方式へ引き継ぐ。
+  // 以前のKEY BOX試験実装からの引き継ぎ
   if (
     typeof state.hintState.keyBoxStage === "number" &&
     !state.hintState.unlocked.keyBox
@@ -166,12 +165,35 @@ function getCurrentHintStep() {
   }
 
 
-  // -------------------------------------------------------
-  // 猫じゃらし棒側
-  // -------------------------------------------------------
+  // =======================================================
+  // 猫じゃらし作成〜MONA移動
+  //
+  // 重要:
+  // 完成した猫じゃらしはMONAへ使用すると消費される。
+  // そのため ITEM_CAT_TEASER_COMPLETE の所持有無だけでは
+  // 過去の進行を判定しない。
+  //
+  // FLAG_MONA_MOVED が true なら
+  // この一連の工程は完全に終了済み。
+  // =======================================================
 
-  if (!hasItem("ITEM_CAT_TEASER_COMPLETE")) {
+  if (!F("FLAG_MONA_MOVED")) {
 
+    // 完成した猫じゃらしを持っている
+    if (hasItem("ITEM_CAT_TEASER_COMPLETE")) {
+      return makeHintStep(
+        "monaMove",
+
+        "モナが興味を持ちそうな物はないかな？",
+
+        "猫プロフィールや、モナの近くの様子を思い出してみよう。",
+
+        "完成した猫じゃらしをWALL2のモナに使おう。"
+      );
+    }
+
+
+    // 棒側パーツがまだない
     if (!hasItem("ITEM_TEASER_ROD_PART")) {
       return makeHintStep(
         "teaserRod",
@@ -185,10 +207,7 @@ function getCurrentHintStep() {
     }
 
 
-    // -----------------------------------------------------
-    // 猫じゃらし合成
-    // -----------------------------------------------------
-
+    // 羽根側＋棒側が揃っている
     if (
       hasItem("ITEM_TEASER_ROD_PART") &&
       hasItem("ITEM_TEASER_FEATHER_PART")
@@ -203,14 +222,10 @@ function getCurrentHintStep() {
         "猫じゃらしの羽根側パーツと棒側パーツを組み合わせよう。"
       );
     }
-  }
 
 
-  // -------------------------------------------------------
-  // MONAを移動
-  // -------------------------------------------------------
-
-  if (!F("FLAG_MONA_MOVED")) {
+    // 通常ここには来ないが、
+    // 状態不整合時も古い探索ヒントへ巻き戻さずMONA段階を優先
     return makeHintStep(
       "monaMove",
 
@@ -274,11 +289,23 @@ function getCurrentHintStep() {
   }
 
 
-  // -------------------------------------------------------
-  // キャットタワー
-  // -------------------------------------------------------
+  // =======================================================
+  // キャットタワー〜スタッフカード認証
+  //
+  // 重要:
+  // 修復済みスタッフカードはカードリーダー使用時に消費される。
+  // そのため ITEM_STAFF_CARD_REPAIRED の非所持だけを見て
+  // キャットタワーやカード合成へ戻してはいけない。
+  //
+  // FLAG_STAFF_CARD_AUTHENTICATED が true なら
+  // カード関連工程は終了済み。
+  // =======================================================
 
-  if (!hasItem("ITEM_STAFF_CARD_REPAIRED")) {
+  if (!F("FLAG_STAFF_CARD_AUTHENTICATED")) {
+
+    // -----------------------------------------------------
+    // キャットタワー
+    // -----------------------------------------------------
 
     if (!F("FLAG_CAT_TOWER_SOLVED")) {
       return makeHintStep(
@@ -311,13 +338,10 @@ function getCurrentHintStep() {
 
 
     // -----------------------------------------------------
-    // カード合成
+    // スタッフカード合成
     // -----------------------------------------------------
 
-    if (
-      hasItem("ITEM_STAFF_CARD_A") &&
-      hasItem("ITEM_STAFF_CARD_B")
-    ) {
+    if (!hasItem("ITEM_STAFF_CARD_REPAIRED")) {
       return makeHintStep(
         "staffCardCombine",
 
@@ -328,6 +352,18 @@ function getCurrentHintStep() {
         "スタッフカードAとスタッフカードBを組み合わせて、修復したスタッフカードを作ろう。"
       );
     }
+
+
+    // 修復済みカードを持っているが未認証
+    return makeHintStep(
+      "staffDoor",
+
+      "修復したスタッフカードを使えそうな場所を探してみよう。",
+
+      "WALL4のスタッフ専用ドアには、カードリーダーと暗証パネルが付いている。",
+
+      "修復したスタッフカードをWALL4のスタッフ専用ドアのカードリーダーに使おう。"
+    );
   }
 
 
@@ -339,11 +375,11 @@ function getCurrentHintStep() {
     return makeHintStep(
       "staffDoor",
 
-      "修復したスタッフカードと、店内にある4匹の猫の情報が必要になりそうだ。",
+      "暗証番号には、店内にある4匹の猫の情報が関係していそうだ。",
 
       "雑誌の肉球1〜4が示す特徴を猫プロフィールと見比べて、それぞれの猫の名前の色を確認してみよう。",
 
-      "肉球1〜4は、てて → ソラ → モナ → ミルク。名前の色は赤 → 緑 → 青 → 黄。スタンプカードの数字を当てはめると「3214」になる。修復したスタッフカードを認証してから3214を入力しよう。"
+      "肉球1〜4は、てて → ソラ → モナ → ミルク。名前の色は赤 → 緑 → 青 → 黄。スタンプカードの数字を当てはめると「3214」になる。"
     );
   }
 
@@ -756,7 +792,7 @@ function unlockNextHintForCurrentStep() {
 function grantHintReward() {
 
   // HINT画面から
-  // 「次のヒントを見る」を押した場合は、
+  // 「次のヒントを見る」を押した場合は
   // previousScreenをHINTで上書きしない。
   const alreadyOnHintScreen =
     state.screen === SCREEN.HINT;

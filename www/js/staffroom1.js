@@ -105,20 +105,54 @@ const HEALTH_CHECK_RECTS = {
   MONA: { x: 0.5413, y: 0.4620, w: 0.1993, h: 0.1399 },
 };
 
+// ---------------------------------------------------------
+// HEALTH CHECK 一時UI状態
+// 押した瞬間の演出用。セーブ不要。
+// ---------------------------------------------------------
+const healthCheckUiState = {
+  pressedCat: null,
+  processing: false,
+};
+
 ZOOM_TARGETS.STAFF_HEALTH_CHECK_CASE = {
   getView() {
     const solved = F("FLAG_HEALTH_CHECK_SOLVED");
     const taken = F("FLAG_UV_LIGHT_TAKEN");
 
     if (!solved) {
-      const hotspots = HEALTH_CHECK_BUTTONS.map((btn) => ({
-        id: `staff_health_check_${btn.catKey.toLowerCase()}`,
-        rect: HEALTH_CHECK_RECTS[btn.catKey],
-        onTap: () => onHealthCheckTap(btn.catKey),
-      }));
-      return { layers: ["zoom_health_check_case.png"], hotspots };
-    }
 
+  const pressedButtons =
+    state.puzzleInputs.healthCheckSequence;
+
+  const hotspots =
+    HEALTH_CHECK_BUTTONS.map((btn) => {
+
+      // 正解済みボタン、または今まさに押したボタンを押し込み表示
+      const isPressed =
+  pressedButtons.includes(btn.catKey);
+
+      return {
+        id:
+          `staff_health_check_${btn.catKey.toLowerCase()}`,
+
+        rect:
+          HEALTH_CHECK_RECTS[btn.catKey],
+
+        className:
+          isPressed
+            ? "health-check-button health-check-button-pressed"
+            : "health-check-button",
+
+        onTap:
+          () => onHealthCheckTap(btn.catKey),
+      };
+    });
+
+  return {
+    layers: ["zoom_health_check_case.png"],
+    hotspots,
+  };
+}
     const layers = ["zoom_health_check_case_open.png"];
     const hotspots = [];
     if (!taken) {
@@ -137,29 +171,134 @@ ZOOM_TARGETS.STAFF_HEALTH_CHECK_CASE = {
 };
 
 function onHealthCheckTap(catKey) {
-  if (F("FLAG_HEALTH_CHECK_SOLVED")) return;
 
-  const seq = state.puzzleInputs.healthCheckSequence;
-  const expected = HEALTH_CHECK_ANSWER[seq.length];
-
-  if (catKey !== expected) {
-    state.puzzleInputs.healthCheckSequence = [];
-    saveGame();
-    showZoomMessage("違うみたい…もう一度。");
-    renderZoomScreen();
+  if (F("FLAG_HEALTH_CHECK_SOLVED")) {
     return;
   }
 
+  if (healthCheckUiState.processing) {
+    return;
+  }
+
+  const seq =
+    state.puzzleInputs.healthCheckSequence;
+
+
+  // -----------------------------------------------------
+  // 同じボタンをもう一度押した場合
+  // -----------------------------------------------------
+  // すでに押したボタンは再入力させない。
+  // 押し込み状態もそのまま維持する。
+  if (seq.includes(catKey)) {
+    return;
+  }
+
+
+  // -----------------------------------------------------
+  // 入力追加
+  // -----------------------------------------------------
+
   seq.push(catKey);
 
-  if (seq.length === HEALTH_CHECK_ANSWER.length) {
-    setF("FLAG_HEALTH_CHECK_SOLVED", true); // setF内でsaveGame()される
-    state.puzzleInputs.healthCheckSequence = [];
-    saveGame();
-  } else {
-    saveGame();
-  }
+  saveGame();
+
+  // 押したボタンを押し込み表示
   renderZoomScreen();
+
+
+  // -----------------------------------------------------
+  // まだ4回未満
+  // -----------------------------------------------------
+
+  if (
+    seq.length <
+    HEALTH_CHECK_ANSWER.length
+  ) {
+    return;
+  }
+
+
+  // -----------------------------------------------------
+  // 4回入力完了
+  // -----------------------------------------------------
+
+  healthCheckUiState.processing =
+    true;
+
+
+  const isCorrect =
+    HEALTH_CHECK_ANSWER.every(
+      (catKey, index) =>
+        seq[index] === catKey
+    );
+
+
+  // -----------------------------------------------------
+  // 正解
+  // -----------------------------------------------------
+
+  if (isCorrect) {
+
+    // 4つ全部押された状態を
+    // 少し見せてからケースを開く
+    setTimeout(() => {
+
+      setF(
+        "FLAG_HEALTH_CHECK_SOLVED",
+        true
+      );
+
+      state.puzzleInputs
+        .healthCheckSequence =
+        [];
+
+      healthCheckUiState
+        .pressedCat =
+        null;
+
+      healthCheckUiState
+        .processing =
+        false;
+
+      saveGame();
+
+      renderZoomScreen();
+
+    }, 400);
+
+    return;
+  }
+
+
+  // -----------------------------------------------------
+  // 不正解
+  // -----------------------------------------------------
+
+  // 4つ全部押された状態を
+  // 少し見せてからリセット
+  setTimeout(() => {
+
+    state.puzzleInputs
+      .healthCheckSequence =
+      [];
+
+    healthCheckUiState
+      .pressedCat =
+      null;
+
+    healthCheckUiState
+      .processing =
+      false;
+
+    saveGame();
+
+    renderZoomScreen();
+
+    showZoomMessage(
+      "違うみたい…もう一度。"
+    );
+
+  }, 500);
 }
 
 function onHealthCheckUvTap() {
