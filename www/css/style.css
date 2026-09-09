@@ -326,14 +326,35 @@ body {
      frameがベース画像と同じ縦横比になっているため、この0〜1はベース画像そのものの座標と一致する。 */
 }
 
-/* Hotspot本体(壁用・ズーム用共通) */
 .hotspot {
   position: absolute;
+
   border: none;
-  background: rgba(255, 255, 255, 0.001); /* 完全透明だとiOSでタップ判定が不安定なため極薄背景 */
   padding: 0;
+
+  /* 完全透明だとiOSでタップ判定が不安定なため極薄背景 */
+  background: rgba(255, 255, 255, 0.001);
+
   cursor: pointer;
+
+  /* iOS / WKWebView のタップ時ハイライトを無効化 */
+  -webkit-tap-highlight-color: transparent;
+
+  /* button標準スタイルを無効化 */
+  -webkit-appearance: none;
+  appearance: none;
+
+  outline: none;
+  box-shadow: none;
 }
+
+.hotspot:active,
+.hotspot:focus {
+  background: rgba(255, 255, 255, 0.001);
+  outline: none;
+  box-shadow: none;
+}
+
 /* STEP11.5-C: 実画像照合による目視確認が完了したため、開発用の破線枠を無効化する。
    正式プレイ画面ではHotspot領域は見えない。
 .hotspot {
@@ -344,26 +365,48 @@ body {
 
 .nav-arrow {
   position: absolute;
-  /* wall-stageのpadding-top/padding-bottomの差分だけ50%からずらし、
-     実際に表示されている画像領域の垂直中央に一致させる(STEP12-A)。 */
-  top: calc(
-    50% +
-    (var(--safe-top) + var(--topbar-reserve) - var(--safe-bottom) - var(--inventory-reserve) - var(--banner-reserve)) / 2
+
+  /*
+    壁移動ボタンを画像中央から下部へ移動。
+    inventory / AdMobバナー / Safe Areaには重ならない位置にする。
+  */
+  top: auto;
+  bottom: calc(
+    var(--banner-reserve) +
+    var(--safe-bottom) +
+    var(--inventory-reserve) +
+    18px
   );
-  transform: translateY(-50%);
+
+  transform: none;
+
   z-index: 20;
+
   width: 46px;
   height: 46px;
+
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.75);
+
+  background: rgba(255,255,255,0.78);
   color: var(--color-wood-dark);
+
   font-size: 24px;
+
   box-shadow: var(--shadow-soft);
 }
-.nav-left  { left: 12px; }
-.nav-right { right: 12px; }
-.nav-arrow.hidden { display: none; }
+
+.nav-left {
+  left: 12px;
+}
+
+.nav-right {
+  right: 12px;
+}
+
+.nav-arrow.hidden {
+  display: none;
+}
 
 /* =========================================================
    INVENTORY (STEP2 / STEP12-A: Safe Area対応)

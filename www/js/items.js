@@ -63,6 +63,10 @@ const ITEM_DEFS = {
     file: "item_small_brass_key.png",
     name: "小さな真鍮の鍵",
   },
+  ITEM_KEYBOX_MEMO: {
+  file: "item_memo_in_drawer.png",
+  name: "KEY BOXのメモ",
+},
   ITEM_ENTRANCE_KEY: {
     file: "item_entrance_key.png",
     name: "玄関の鍵",

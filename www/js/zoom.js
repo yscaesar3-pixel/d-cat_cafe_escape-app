@@ -51,11 +51,25 @@ function pushZoom(targetId) {
  * 空ならGAME(またはprevious screen)へ戻る。
  */
 function closeZoom() {
+  const closingTarget =
+    state.zoomStack[state.zoomStack.length - 1];
+
   state.zoomStack.pop();
+
+  // キャットタワーは閉じるたびに
+  // 次回 zoom_cat_tower_closed から始める
+  if (
+    closingTarget === "WALL2_CAT_TOWER" &&
+    typeof wall2UiState !== "undefined"
+  ) {
+    wall2UiState.catTowerRevealed = false;
+  }
+
   if (state.zoomStack.length > 0) {
     renderZoomScreen();
     return;
   }
+
   closeToPreviousScreen();
 }
 
@@ -67,7 +81,7 @@ function closeZoom() {
  */
 const KNOWN_ASPECT_RATIOS = {
   "bg_wall_01.png": 1122 / 1402,
-  "bg_wall_02.png": 1194 / 1317,
+  "bg_wall_02.png": 1122 / 1402,
   "bg_wall_03.png": 1122 / 1402,
   "bg_wall_04.png": 1122 / 1402,
   "bg_staff_room.png": 1024 / 1536,

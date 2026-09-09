@@ -1,25 +1,39 @@
 /* =========================================================
    猫カフェからの脱出 - STEP1 main.js
-   イベント配線のみ。謎判定・アイテム処理はこのSTEPに含まない。
+   イベント配線のみ。
+   謎判定・アイテム処理はこのSTEPに含まない。
    ========================================================= */
 
+
+// =========================================================
+// AUDIO MENU
+// =========================================================
+
 function updateAudioMenuButtons() {
+
   const bgmBtn =
-    document.getElementById("btn-menu-bgm");
+    document.getElementById(
+      "btn-menu-bgm"
+    );
 
   const seBtn =
-    document.getElementById("btn-menu-se");
+    document.getElementById(
+      "btn-menu-se"
+    );
+
 
   if (bgmBtn) {
     bgmBtn.textContent =
       `BGM：${audioSettings.bgm ? "ON" : "OFF"}`;
   }
 
+
   if (seBtn) {
     seBtn.textContent =
       `効果音：${audioSettings.se ? "ON" : "OFF"}`;
   }
 }
+
 
 // =========================================================
 // MEMO
@@ -28,16 +42,19 @@ function updateAudioMenuButtons() {
 const MEMO_STORAGE_KEY =
   "nekocafeescape_memo";
 
-let memoPreviousScreen = null;
+let memoPreviousScreen =
+  null;
 
 
 function loadMemoText() {
+
   try {
     return (
       localStorage.getItem(
         MEMO_STORAGE_KEY
       ) || ""
     );
+
   } catch (e) {
     return "";
   }
@@ -45,12 +62,16 @@ function loadMemoText() {
 
 
 function saveMemoText(text) {
+
   try {
+
     localStorage.setItem(
       MEMO_STORAGE_KEY,
       text
     );
+
   } catch (e) {
+
     console.warn(
       "Memo save failed",
       e
@@ -60,175 +81,537 @@ function saveMemoText(text) {
 
 
 function openMemo() {
+
   memoPreviousScreen =
     state.screen;
+
 
   const textarea =
     document.getElementById(
       "memo-text"
     );
+
 
   if (textarea) {
     textarea.value =
       loadMemoText();
   }
 
- showScreen(SCREEN.MEMO);
+
+  showScreen(
+    SCREEN.MEMO
+  );
 }
 
 
 function closeMemo() {
+
   const textarea =
     document.getElementById(
       "memo-text"
     );
 
+
   if (textarea) {
+
     saveMemoText(
       textarea.value
     );
   }
 
+
   const destination =
     memoPreviousScreen ||
     SCREEN.GAME;
 
-  memoPreviousScreen = null;
 
-  showScreen(destination);
+  memoPreviousScreen =
+    null;
+
+
+  showScreen(
+    destination
+  );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
 
-  // --- MEMO ---
-document
-  .getElementById("btn-open-memo-game")
-  .addEventListener("click", () => {
-    openMemo();
-  });
+// =========================================================
+// DOM READY
+// =========================================================
 
-document
-  .getElementById("btn-open-memo-zoom")
-  .addEventListener("click", () => {
-    openMemo();
-  });
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-document
-  .getElementById("btn-memo-close")
-  .addEventListener("click", () => {
-    closeMemo();
-  });
 
-document
-  .getElementById("memo-text")
-  .addEventListener("input", (e) => {
-    saveMemoText(e.target.value);
-  });
+    // -----------------------------------------------------
+    // MEMO
+    // -----------------------------------------------------
 
-  // --- TITLE ---
-  document.getElementById("btn-title-start").addEventListener("click", () => {
-    startNewGame(); // 既存セーブがあっても引き継がない
-    showScreen(SCREEN.INTRO);
-  });
-  document.getElementById("btn-title-continue").addEventListener("click", () => {
-    if (!hasSaveData()) return; // 念のための二重ガード(通常はdisabledで防ぐ)
-    const restored = continueGame();
-    if (restored) {
-      // 通常のセーブはstate.screen=GAMEへ正規化済み。
-      // クリア直前セーブの場合はstate.screen=CLEARRESULTになっているため、
-      // ここで一律GAMEへ上書きせず、continueGame()が設定したscreenを尊重する。
-      if (state.screen === SCREEN.GAME) {
-        playBGM();
-      }
-      showScreen(state.screen);
-    } else {
-      // セーブ破損等でstartNewGame()にフォールバックした場合はINTROから始める。
-      showScreen(SCREEN.INTRO);
-    }
-  });
+    document
+      .getElementById(
+        "btn-open-memo-game"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          openMemo();
+        }
+      );
 
-  // --- INTRO ---
-  document.getElementById("btn-intro-start").addEventListener("click", () => {
-    playBGM();
-    showScreen(SCREEN.GAME);
-  });
 
-  // --- GAME: 壁移動 ---
-  document.getElementById("nav-left").addEventListener("click", () => {
-    moveWall(-1);
-    renderGameScreen();
-  });
-  document.getElementById("nav-right").addEventListener("click", () => {
-    moveWall(1);
-    renderGameScreen();
-  });
+    document
+      .getElementById(
+        "btn-open-memo-zoom"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          openMemo();
+        }
+      );
 
-  // --- GAME: STAFF ROOMからの正式退室導線 ---
-  // 入室はWALL_4のスタッフ扉(FLAG_STAFF_DOOR_UNLOCKED)経由のみ。ここは退室専用。
-  document.getElementById("btn-exit-staff-room").addEventListener("click", () => {
-    exitStaffRoom();
-    renderGameScreen();
-  });
 
- // --- GAME: メニューを開く ---
-document.getElementById("btn-open-menu").addEventListener("click", () => {
-  showScreen(SCREEN.MENU, { rememberPrevious: true });
-  updateAudioMenuButtons();
-});
+    document
+      .getElementById(
+        "btn-memo-close"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          closeMemo();
+        }
+      );
 
-  // --- ZOOM ---
-  document.getElementById("btn-zoom-close").addEventListener("click", () => {
-    closeZoom();
-  });
 
-  // --- ITEMDETAIL (骨格のみ) ---
-  document.getElementById("btn-itemdetail-close").addEventListener("click", () => {
-    closeToPreviousScreen();
-  });
+    document
+      .getElementById(
+        "memo-text"
+      )
+      .addEventListener(
+        "input",
+        (e) => {
+          saveMemoText(
+            e.target.value
+          );
+        }
+      );
 
-  // --- HINT ---
-  document.getElementById("btn-hint-close").addEventListener("click", () => {
-    closeToPreviousScreen();
-  });
 
-  // --- MENU ---
-  document.getElementById("btn-menu-resume").addEventListener("click", () => {
-    closeToPreviousScreen();
-  });
-  
-document.getElementById("btn-menu-bgm").addEventListener("click", () => {
-  setBGMEnabled(!audioSettings.bgm);
-  updateAudioMenuButtons();
-});
+    // -----------------------------------------------------
+    // TITLE
+    // -----------------------------------------------------
 
-document.getElementById("btn-menu-se").addEventListener("click", () => {
-  setSEEnabled(!audioSettings.se);
-  updateAudioMenuButtons();
-});
-  
-  document.getElementById("btn-menu-hint").addEventListener("click", () => {
-    // STEP12-C: 「広告を見てヒント」。報酬を実際に獲得できた場合のみHINTを表示する
-    // (usedHintCount加算・HINT表示はgrantHintReward側の責務。ads.js参照)。
-    requestHintViaRewardedAd(grantHintReward);
-  });
-  document.getElementById("btn-menu-title").addEventListener("click", () => {
-  const confirmed = window.confirm("タイトルに戻りますか？\n進行状況は保存されています。");
-  if (!confirmed) return;
+    document
+      .getElementById(
+        "btn-title-start"
+      )
+      .addEventListener(
+        "click",
+        () => {
 
-  stopBGM();
+          // 既存セーブがあっても
+          // 新規ゲームへ引き継がない。
+          startNewGame();
 
-  state.previousScreen = null;
-  showScreen(SCREEN.TITLE);
-});
-  // --- CLEARRESULT ---
-  document.getElementById("btn-clearresult-title").addEventListener("click", () => {
-    showScreen(SCREEN.TITLE);
-  });
+          showScreen(
+            SCREEN.INTRO
+          );
+        }
+      );
 
-  // --- 初期画面 ---
-  showScreen(SCREEN.TITLE);
 
-  // STEP12-C: AdMob初期化はゲーム起動をブロックしないよう非同期で開始する。
-  // Web環境ではinitAds()内部でno-opになる(isNativePlatform()がfalse)。
-  initAds();
-});
+    document
+      .getElementById(
+        "btn-title-continue"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          if (!hasSaveData()) {
+            return;
+          }
+
+
+          const restored =
+            continueGame();
+
+
+          if (restored) {
+
+            // 通常セーブはGAMEへ正規化済み。
+            // CLEARRESULT等の場合は
+            // continueGame()が設定したscreenを尊重する。
+            if (
+              state.screen ===
+              SCREEN.GAME
+            ) {
+              playBGM();
+            }
+
+
+            showScreen(
+              state.screen
+            );
+
+          } else {
+
+            showScreen(
+              SCREEN.INTRO
+            );
+          }
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // INTRO
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-intro-start"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          playBGM();
+
+          showScreen(
+            SCREEN.GAME
+          );
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // GAME: 壁移動
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "nav-left"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          moveWall(-1);
+
+          renderGameScreen();
+        }
+      );
+
+
+    document
+      .getElementById(
+        "nav-right"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          moveWall(1);
+
+          renderGameScreen();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // STAFF ROOM 退室
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-exit-staff-room"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          exitStaffRoom();
+
+          renderGameScreen();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // GAME: MENU
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-open-menu"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          showScreen(
+            SCREEN.MENU,
+            {
+              rememberPrevious:
+                true,
+            }
+          );
+
+          updateAudioMenuButtons();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // ZOOM
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-zoom-close"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          closeZoom();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // ITEM DETAIL
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-itemdetail-close"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          closeToPreviousScreen();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // HINT: 閉じる
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-hint-close"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          closeToPreviousScreen();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // HINT: 次の段階
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-hint-next"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          // 新しい段階を開放するときだけ
+          // リワード広告を表示する。
+          if (
+            !canUnlockNextHintForCurrentStep()
+          ) {
+            return;
+          }
+
+          requestHintViaRewardedAd(
+            grantHintReward
+          );
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // MENU: ゲームへ戻る
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-menu-resume"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          closeToPreviousScreen();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // MENU: BGM
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-menu-bgm"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          setBGMEnabled(
+            !audioSettings.bgm
+          );
+
+          updateAudioMenuButtons();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // MENU: SE
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-menu-se"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          setSEEnabled(
+            !audioSettings.se
+          );
+
+          updateAudioMenuButtons();
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // MENU: HINT
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-menu-hint"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          // 今の進行段階について
+          // すでにヒント1以上が開放済みなら、
+          // 広告なしでHINT画面へ。
+          if (
+            hasUnlockedHintForCurrentStep()
+          ) {
+
+            showScreen(
+              SCREEN.HINT,
+              {
+                rememberPrevious:
+                  true,
+              }
+            );
+
+            return;
+          }
+
+
+          // 今の進行段階のヒントが
+          // まだ1つも開放されていない場合のみ
+          // 広告を表示する。
+          requestHintViaRewardedAd(
+            grantHintReward
+          );
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // MENU: TITLE
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-menu-title"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          const confirmed =
+            window.confirm(
+              "タイトルに戻りますか？\n進行状況は保存されています。"
+            );
+
+
+          if (!confirmed) {
+            return;
+          }
+
+
+          stopBGM();
+
+          state.previousScreen =
+            null;
+
+          showScreen(
+            SCREEN.TITLE
+          );
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // CLEAR RESULT
+    // -----------------------------------------------------
+
+    document
+      .getElementById(
+        "btn-clearresult-title"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          showScreen(
+            SCREEN.TITLE
+          );
+        }
+      );
+
+
+    // -----------------------------------------------------
+    // 初期画面
+    // -----------------------------------------------------
+
+    showScreen(
+      SCREEN.TITLE
+    );
+
+
+    // -----------------------------------------------------
+    // AdMob
+    // -----------------------------------------------------
+
+    // ゲーム起動をブロックしないよう
+    // 非同期で初期化。
+    // Web環境ではinitAds()内部でno-op。
+    initAds();
+  }
+);

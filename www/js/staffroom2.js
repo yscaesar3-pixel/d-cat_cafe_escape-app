@@ -10,60 +10,78 @@
 // ---------------------------------------------------------
 WALL_HOTSPOTS.ROOM_STAFF.push(
   {
-  id: "staff_green_carrier",
+    id: "staff_green_carrier",
 
-  rect: { x: 0.17, y: 0.46, w: 0.22, h: 0.21 },
+    rect: { x: 0.17, y: 0.46, w: 0.22, h: 0.21 },
 
-  onTap: () => {
-    openZoom("STAFF_GREEN_CARRIER");
+    onTap: () => {
+      openZoom("STAFF_GREEN_CARRIER");
 
-    setTimeout(() => {
-      showZoomMessage("緑色のキャリーだ。横に小さなスロットがある。");
-    }, 0);
+      setTimeout(() => {
+        showZoomMessage("緑色のキャリーだ。横に小さなスロットがある。");
+      }, 0);
+    },
   },
-},
+
   {
-  // プレイヤー向けには単に「ロッカー」。どれがMONAのものかは推理させる。
-  id: "staff_lockers-top",
+    // プレイヤー向けには単に「ロッカー」。どれがMONAのものかは推理させる。
+    id: "staff_lockers-top",
 
-  rect: { x: 0.2721, y: 0.1483, w: 0.2459, h: 0.3109 },
+    rect: { x: 0.2721, y: 0.1483, w: 0.2459, h: 0.3109 },
 
-  onTap: () => {
-    openZoom("STAFF_MONA_LOCKER");
+    onTap: () => {
+      openZoom("STAFF_MONA_LOCKER");
 
-    setTimeout(() => {
-      showZoomMessage("猫ごとに分けられたロッカーが並んでいる。");
-    }, 0);
+      setTimeout(() => {
+        showZoomMessage("猫ごとに分けられたロッカーが並んでいる。");
+      }, 0);
+    },
   },
-},
 
-{
-  // プレイヤー向けには単に「ロッカー」。どれがMONAのものかは推理させる。
-  id: "staff_lockers-bottom",
-
-  rect: { x: 0.3824, y: 0.4634, w: 0.1357, h: 0.1145 },
-
-  onTap: () => {
-    openZoom("STAFF_MONA_LOCKER");
-
-    setTimeout(() => {
-      showZoomMessage("猫ごとに分けられたロッカーが並んでいる。");
-    }, 0);
-  },
-},
   {
-  id: "staff_desk",
+    // プレイヤー向けには単に「ロッカー」。どれがMONAのものかは推理させる。
+    id: "staff_lockers-bottom",
 
-  rect: { x: 0.3972, y: 0.5807, w: 0.6028, h: 0.4193 },
+    rect: { x: 0.3824, y: 0.4634, w: 0.1357, h: 0.1145 },
 
-  onTap: () => {
-    openZoom("STAFF_DESK");
+    onTap: () => {
+      openZoom("STAFF_MONA_LOCKER");
 
-    setTimeout(() => {
-      showZoomMessage("スタッフ用の事務机だ。引き出しが付いている。");
-    }, 0);
+      setTimeout(() => {
+        showZoomMessage("猫ごとに分けられたロッカーが並んでいる。");
+      }, 0);
+    },
   },
-}
+
+  {
+    id: "staff_desk",
+
+    rect: { x: 0.3972, y: 0.5807, w: 0.6028, h: 0.4193 },
+
+    onTap: () => {
+      openZoom("STAFF_DESK");
+
+      setTimeout(() => {
+        showZoomMessage("スタッフ用の事務机だ。引き出しが付いている。");
+      }, 0);
+    },
+  },
+
+  {
+    id: "staff_keybox_memo_cabinet",
+
+    // スタッフルーム左側の木製収納
+    rect: {
+      x: 0.0000,
+      y: 0.4300,
+      w: 0.1700,
+      h: 0.3400,
+    },
+
+    onTap: () => {
+      openZoom("STAFF_KEYBOX_MEMO_CABINET");
+    },
+  },
 );
 
 // ---------------------------------------------------------
@@ -81,14 +99,19 @@ ZOOM_TARGETS.STAFF_GREEN_CARRIER = {
         hotspots: [
           {
             id: "staff_green_carrier_slot",
-            // zoom_carriers.pngでは上=青/左下=赤/右下=緑。緑スロットは右下キャリー上部。
-            rect: { x: 0.5392, y: 0.5440, w: 0.3943, h: 0.2925 },
+            // zoom_carriers.pngでは上=青/左下=赤/右下=緑。
+            // 緑スロットは右下キャリー上部。
+            rect: {
+              x: 0.5392,
+              y: 0.5440,
+              w: 0.3943,
+              h: 0.2925,
+            },
             onTap: onGreenCarrierUseTap,
           },
         ],
       };
     }
-
     const keyTaken = F("FLAG_MONA_LOCKER_KEY_TAKEN");
     // 右下・開いた緑キャリー内部から大きくはみ出さない範囲にまとめる。
     const collarRect = { x: 0.58, y: 0.66, w: 0.18, h: 0.10 };
@@ -249,6 +272,107 @@ const staffNoteUiState = {
   open: false,
 };
 
+// ---------------------------------------------------------
+// KEY BOX用メモ収納
+// スタッフルーム左側の木製棚
+// ---------------------------------------------------------
+
+ZOOM_TARGETS.STAFF_KEYBOX_MEMO_CABINET = {
+  getView() {
+
+    const open =
+      F("FLAG_KEYBOX_MEMO_CABINET_OPEN");
+
+    const memoTaken =
+      F("FLAG_KEYBOX_MEMO_TAKEN");
+
+
+    // -------------------------
+    // 閉じた状態
+    // -------------------------
+    if (!open) {
+
+  return {
+    layers: [
+      "zoom_staff_drawer_closed.png"
+    ],
+
+    hotspots: [
+      {
+        id: "staff_keybox_memo_cabinet_doors",
+
+
+        // 下段の両開き扉
+        rect: {
+          x: 0.1800,
+          y: 0.5100,
+          w: 0.4900,
+          h: 0.3400,
+        },
+
+        onTap: () => {
+
+          setF(
+            "FLAG_KEYBOX_MEMO_CABINET_OPEN",
+            true
+          );
+
+          renderZoomScreen();
+        },
+      },
+    ],
+  };
+}
+
+
+    // -------------------------
+    // 開いた状態
+    // -------------------------
+
+    const layers = [
+      "zoom_staff_drawer_open.png"
+    ];
+
+    const hotspots = [];
+
+
+    // メモ未取得時だけ表示
+    if (!memoTaken) {
+
+      const memoRect = {
+        x: 0.3000,
+        y: 0.5500,
+        w: 0.2500,
+        h: 0.1800,
+      };
+
+
+      layers.push({
+        src: "overlay_memo_in_drawer.png",
+        rect: memoRect,
+      });
+
+
+      hotspots.push({
+        id:
+          "staff_keybox_memo_overlay",
+
+        rect:
+          expandRect(memoRect),
+
+        onTap:
+          onKeyboxMemoTap,
+      });
+    }
+
+
+    return {
+      layers,
+      hotspots,
+    };
+  },
+};
+
 ZOOM_TARGETS.STAFF_DESK = {
   getView() {
     return {
@@ -346,4 +470,36 @@ function renderStaffNotePanel(frameEl) {
   panel.appendChild(closeBtn);
 
   frameEl.appendChild(panel);
+}
+
+function onKeyboxMemoTap() {
+
+  if (
+    F("FLAG_KEYBOX_MEMO_TAKEN")
+  ) {
+    return;
+  }
+
+
+  addItem(
+    "ITEM_KEYBOX_MEMO"
+  );
+
+  setF(
+    "FLAG_KEYBOX_MEMO_TAKEN",
+    true
+  );
+
+
+  renderZoomScreen();
+  renderInventory();
+
+
+  setTimeout(() => {
+
+    showZoomMessage(
+      "KEY BOXと、数字の入った丸が描かれている。"
+    );
+
+  }, 0);
 }

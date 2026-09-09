@@ -306,6 +306,21 @@ ZOOM_TARGETS.WALL4_STAFF_DOOR_KEYPAD = {
       });
 
 
+    // 画像内のスタッフカード挿入口
+    hotspots.push({
+      id: "wall4_staff_keypad_card_reader",
+
+      rect: {
+        x: 0.342,
+        y: 0.271,
+        w: 0.320,
+        h: 0.080,
+      },
+
+      onTap: onStaffCardReaderTap,
+    });
+
+
     // 画像内の「戻る」
     hotspots.push({
       id: "wall4_staff_keypad_back",
@@ -330,7 +345,6 @@ ZOOM_TARGETS.WALL4_STAFF_DOOR_KEYPAD = {
     };
   },
 };
-
 
 // ---------------------------------------------------------
 // 画像内の液晶表示

@@ -172,7 +172,7 @@ function onHealthCheckUvTap() {
 
 // ---------------------------------------------------------
 // Family写真 + UV (9.13)
-// UVライトは使用後もinventoryから削除しない(消費しない)。
+// UVライトはFamily写真への使用時に消費する。
 // ---------------------------------------------------------
 ZOOM_TARGETS.STAFF_FAMILY_PHOTO = {
   getView() {
@@ -200,17 +200,20 @@ function onFamilyPhotoUvTap() {
 
   if (state.selectedItem === "ITEM_UV_LIGHT") {
     setF("FLAG_FAMILY_PHOTO_UV_REVEALED", true);
-    deselectItem(); // UVライトは消費しない。選択状態だけ解除する。
+
+    removeItem("ITEM_UV_LIGHT");
+    deselectItem();
+
     renderZoomScreen();
     renderInventory();
     return;
   }
 
   if (state.selectedItem === null) {
-  showZoomMessage("普通の写真に見えるけど、何か隠されているのかな。");
-} else {
-  showZoomMessage("それを使っても、写真に変化はなさそうだ。");
-}
+    showZoomMessage("普通の写真に見えるけど、何か隠されているのかな。");
+  } else {
+    showZoomMessage("それを使っても、写真に変化はなさそうだ。");
+  }
 }
 
 // ---------------------------------------------------------
